@@ -1,0 +1,7 @@
+stages:
+  build:
+    cmd: Rscript R/build.R
+    deps:
+    - R/build.R
+    outs:
+    - data/reach.parquet

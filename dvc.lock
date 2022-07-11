@@ -1,0 +1,12 @@
+schema: '2.0'
+stages:
+  build:
+    cmd: Rscript R/build.R
+    deps:
+    - path: R/build.R
+      md5: f84889362fd67221d8a605e0d5500f25
+      size: 1572
+    outs:
+    - path: data/reach.parquet
+      md5: 71c493c31abe44298b7ca4a0b47c8936
+      size: 197865
