@@ -1,21 +1,27 @@
-library(tidyverse)
+library(tidyverse,jsonlite)
 
 tmp   <- tempdir()
-bson  <- fs::path("reachExtractor_V2/reachExtractor/hazards.bson")
-bson2 <- fs::path("reachExtractor_V2/reachExtractor/ChemicalData.bson")
-unzip('import/reachExtractor_V2.zip', files=c(bson,bson2), exdir=tmp)
+unzip('import/reachExtractor_V2.zip', exdir=tmp)
+bson <- fs::path(tmp,"reachExtractor_V2/reachExtractor") |> fs::dir_ls(regex="bson")
 
-cmd <- sprintf('bsondump %s --outFile=%s',fs::path(tmp,bson),fs::path(tmp,"haz.json"))
-system(cmd)
+# might need to install mongo for the bsondump command
+url <- "https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2204-x86_64-100.7.0.deb"
+download.file(url,destfile="mongosh.deb")
+system("sudo apt install ./mongosh.deb")
 
-cmd2 <- sprintf('bsondump %s --outFile=%s',fs::path(tmp,bson2),fs::path(tmp,"chem.json"))
-system(cmd2)
-
-
-haz <- readLines(fs::path(tmp,"haz.json")) |> lapply(jsonlite::fromJSON)
+walk(bson,\(bs){ 
+  js  <- fs::path_ext_set(bs,"json")
+  cmd <- sprintf('bsondump %s --outFile=%s',bs,js)
+  system(cmd)
+})
+bsfile = \(name){fs::path(tmp,"reachExtractor_V2/reachExtractor/",name)}
+haz <- readLines(bsfile("hazards.json")) |> lapply(jsonlite::fromJSON)
 
 tb <- tibble(js=haz) |> unnest_wider(js) |> 
-  select(Hazard,description,`data lacking`,`conclusive but not sufficient for classification`,chemicals) |>
+  select(
+    Hazard,description,`data lacking`,
+      `conclusive but not sufficient for classification`,chemicals
+  ) |>
   mutate(description = trimws(description)) |>
   select(hazard=Hazard,description,
     negative=`conclusive but not sufficient for classification`,
@@ -33,13 +39,18 @@ haz <- dplyr::bind_rows(neg,pos)
 
 # Chemical data
 jm <- possibly(jsonlite::fromJSON,otherwise=list())
-chem <- readLines(fs::path(tmp,"chem.json")) |> map(jm)
+chem <- readLines(bsfile("ChemicalData.json")) |> map(jm)
 
-chemtb <- tibble(js=chem) |>unnest_wider(js) |> select(ecnumber=ECNumber,name) |>
+chemtb <- tibble(js=chem) |> unnest_wider(js) |> 
+  select(ecnumber=ECNumber, smiles=SMILES) |>
   filter(!is.na(ecnumber)) |> unique()
 
 tb <- chemtb |> inner_join(haz,by="ecnumber")
 
-out <- fs::dir_create("data")
-arrow::write_parquet(tb,fs::path(out,"reach.parquet"))
+# enrichedReach
+out <- fs::dir_create("brick") |> fs::path("reach.parquet")
+arrow::write_parquet(tb,out)
 
+# cleanup
+fs::dir_delete(tmp)
+fs::file_delete("mongosh.deb")

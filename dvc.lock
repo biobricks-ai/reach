@@ -4,9 +4,12 @@ stages:
     cmd: Rscript R/build.R
     deps:
     - path: R/build.R
-      md5: f84889362fd67221d8a605e0d5500f25
-      size: 1572
+      md5: d3ecf8279223c1796e5282f08bf52fc5
+      size: 1843
+    - path: import/reachExtractor_V2.zip
+      md5: 661ec4921432aaba285a41f3a25a0908
+      size: 1682993191
     outs:
-    - path: data/reach.parquet
-      md5: 71c493c31abe44298b7ca4a0b47c8936
-      size: 197865
+    - path: brick/reach.parquet
+      md5: 2332a832cf8b4d32b373cb6f14a562b1
+      size: 262980

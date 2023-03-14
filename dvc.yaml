@@ -3,5 +3,6 @@ stages:
     cmd: Rscript R/build.R
     deps:
     - R/build.R
+    - import/reachExtractor_V2.zip
     outs:
-    - data/reach.parquet
+    - brick/reach.parquet
