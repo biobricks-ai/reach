@@ -6,3 +6,10 @@ stages:
     - import/reachExtractor_V2.zip
     outs:
     - brick/reach.parquet
+  
+  build_reach_crawl:
+    cmd: python3 src/reach_crawl.py
+    deps:
+    - downloads/reach.xlsx
+    outs:
+    - brick/reach_crawl.parquet
