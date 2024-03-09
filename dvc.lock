@@ -11,7 +11,8 @@ stages:
       size: 1682993191
     outs:
     - path: brick/reach.parquet
-      md5: 2332a832cf8b4d32b373cb6f14a562b1
+      hash: md5
+      md5: 5ebf2bf5e940611d31be94741e399a45
       size: 262980
   build_reach_crawl:
     cmd: python3 src/reach_crawl.py
